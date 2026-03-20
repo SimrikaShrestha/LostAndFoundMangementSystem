@@ -14,6 +14,14 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+import model.DBConnectionTest;
+
 public class SearchItemsPage {
 
     private Stage stage;
@@ -45,6 +53,7 @@ public class SearchItemsPage {
 
         HBox searchBox = new HBox(10);
         searchBox.setAlignment(Pos.CENTER_LEFT);
+
         TextField searchField = new TextField();
         searchField.setPromptText("Search by item name, category...");
         searchField.setPrefWidth(400);
@@ -76,34 +85,115 @@ public class SearchItemsPage {
                 colHeader("CATEGORY", 180),
                 colHeader("STATUS", 120),
                 colHeader("DATE", 150),
-                colHeader("CONTACT", 150)
+                colHeader("LOCATION", 150)
         );
 
         resultsBox.getChildren().addAll(resultsTitle, colHeaders, new Separator());
 
-        String[][] sampleData = {
-                {"iPhone 13", "Electronics", "Lost", "Feb 24, 2026", "9800000001"},
-                {"Leather Wallet", "Accessories", "Found", "Feb 22, 2026", "9800000002"},
-                {"Blue Backpack", "Bags", "Lost", "Feb 20, 2026", "9800000003"},
-                {"Dorm Keys", "Personal", "Found", "Feb 18, 2026", "9800000004"}
-        };
+        // ✅ Load all items from database on page open
+        loadResults(resultsBox, "", "All");
 
-        for (String[] row : sampleData) {
-            resultsBox.getChildren().add(buildResultRow(row));
-        }
-
+        // ✅ Search button fetches fresh data from DB every time
         searchBtn.setOnAction(_ -> {
-            resultsBox.getChildren().removeIf(node -> node instanceof HBox && ((HBox) node).getChildren().size() == 5);
-            String query = searchField.getText().toLowerCase();
-            for (String[] row : sampleData) {
-                if (query.isEmpty() || row[0].toLowerCase().contains(query) || row[1].toLowerCase().contains(query)) {
-                    resultsBox.getChildren().add(buildResultRow(row));
-                }
-            }
+            String query  = searchField.getText().trim();
+            String filter = filterBox.getValue();
+            loadResults(resultsBox, query, filter);
+        });
+
+        // ✅ Also search when pressing Enter in the search field
+        searchField.setOnAction(_ -> {
+            String query  = searchField.getText().trim();
+            String filter = filterBox.getValue();
+            loadResults(resultsBox, query, filter);
         });
 
         content.getChildren().addAll(title, subtitle, searchBox, resultsBox);
         return content;
+    }
+
+    /**
+     * Fetches items from MySQL database and displays them in resultsBox.
+     * Filters by keyword and type (Lost / Found / All).
+     * This replaces the old hardcoded sample data.
+     */
+    private void loadResults(VBox resultsBox, String query, String filter) {
+        // Remove old result rows (keep title, headers, separator = first 3 children)
+        resultsBox.getChildren().removeIf(node ->
+            node instanceof HBox && ((HBox) node).getChildren().size() == 5
+        );
+
+        List<String[]> results = fetchFromDatabase(query, filter);
+
+        if (results.isEmpty()) {
+            Label noResults = new Label("No items found.");
+            noResults.setTextFill(Color.GRAY);
+            noResults.setPadding(new Insets(10, 0, 0, 0));
+            noResults.setId("no-results");
+            resultsBox.getChildren().add(noResults);
+        } else {
+            // Remove "No items found" label if present
+            resultsBox.getChildren().removeIf(node ->
+                node instanceof Label && "no-results".equals(node.getId())
+            );
+            for (String[] row : results) {
+                resultsBox.getChildren().add(buildResultRow(row));
+            }
+        }
+    }
+
+    /**
+     * Queries the MySQL database for items matching the search keyword and filter.
+     * Returns a list of String arrays: [name, category, type, date, location]
+     */
+    private List<String[]> fetchFromDatabase(String query, String filter) {
+        List<String[]> list = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder(
+            "SELECT name, category, type, date, location FROM items WHERE 1=1"
+        );
+
+        // Filter by type (Lost / Found)
+        if (!filter.equals("All")) {
+            sql.append(" AND type = ?");
+        }
+
+        // Filter by keyword in name or category
+        if (!query.isEmpty()) {
+            sql.append(" AND (name LIKE ? OR category LIKE ?)");
+        }
+
+        sql.append(" ORDER BY id DESC");  // newest first
+
+        try (Connection conn = new DBConnectionTest().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+
+            if (!filter.equals("All")) {
+                ps.setString(idx++, filter);
+            }
+
+            if (!query.isEmpty()) {
+                ps.setString(idx++, "%" + query + "%");
+                ps.setString(idx++, "%" + query + "%");
+            }
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new String[]{
+                    rs.getString("name"),
+                    rs.getString("category"),
+                    rs.getString("type"),
+                    rs.getString("date"),
+                    rs.getString("location")
+                });
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
     }
 
     private Label colHeader(String text, double width) {
@@ -130,7 +220,7 @@ public class SearchItemsPage {
         Label status = new Label(data[2]);
         status.setPrefWidth(120);
         status.setPadding(new Insets(3, 8, 3, 8));
-        status.setStyle(data[2].equals("Lost")
+        status.setStyle(data[2].equalsIgnoreCase("Lost")
                 ? "-fx-background-color:#ffe0e0; -fx-text-fill:#cc0000; -fx-background-radius:5;"
                 : "-fx-background-color:#d4edda; -fx-text-fill:#155724; -fx-background-radius:5;"
         );
@@ -139,11 +229,11 @@ public class SearchItemsPage {
         date.setPrefWidth(150);
         date.setTextFill(Color.GRAY);
 
-        Label contact = new Label(data[4]);
-        contact.setPrefWidth(150);
-        contact.setTextFill(Color.GRAY);
+        Label location = new Label(data[4]);
+        location.setPrefWidth(150);
+        location.setTextFill(Color.GRAY);
 
-        row.getChildren().addAll(name, category, status, date, contact);
+        row.getChildren().addAll(name, category, status, date, location);
         return row;
     }
 

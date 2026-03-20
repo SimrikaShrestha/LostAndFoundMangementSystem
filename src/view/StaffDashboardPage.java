@@ -15,6 +15,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import model.DBConnection;
+
 public class StaffDashboardPage {
 
     private Stage stage;
@@ -58,17 +63,17 @@ public class StaffDashboardPage {
 
         Separator sep2 = new Separator();
 
-        Button dashboardBtn   = sidebarBtn("Dashboard",      activePage.equals("Dashboard"));
-        Button allItemsBtn    = sidebarBtn("All Items",       activePage.equals("All Items"));
-        Button matchItemsBtn  = sidebarBtn("Match Items",     activePage.equals("Match Items"));
+        Button dashboardBtn     = sidebarBtn("Dashboard",      activePage.equals("Dashboard"));
+        Button allItemsBtn      = sidebarBtn("All Items",      activePage.equals("All Items"));
+        Button matchItemsBtn    = sidebarBtn("Match Items",    activePage.equals("Match Items"));
         Button claimRequestsBtn = sidebarBtn("Claim Requests", activePage.equals("Claim Requests"));
-        Button reportsBtn     = sidebarBtn("Reports",         activePage.equals("Reports"));
+        Button reportsBtn       = sidebarBtn("Reports",        activePage.equals("Reports"));
 
-        dashboardBtn.setOnAction(_ -> { new StaffDashboardPage(stage, staffName).buildAndShow(); });
-        allItemsBtn.setOnAction(_ -> new AllItemsPage(stage, staffName).show());
-        matchItemsBtn.setOnAction(_ -> new MatchItemsPage(stage, staffName).show());
+        dashboardBtn.setOnAction(_     -> new StaffDashboardPage(stage, staffName).buildAndShow());
+        allItemsBtn.setOnAction(_      -> new AllItemsPage(stage, staffName).show());
+        matchItemsBtn.setOnAction(_    -> new MatchItemsPage(stage, staffName).show());
         claimRequestsBtn.setOnAction(_ -> new ClaimRequestsPage(stage, staffName).show());
-        reportsBtn.setOnAction(_ -> new ReportsPage(stage, staffName).show());
+        reportsBtn.setOnAction(_       -> new ReportsPage(stage, staffName).show());
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
@@ -128,36 +133,67 @@ public class StaffDashboardPage {
     private VBox buildMainContent() {
         VBox content = new VBox(20);
         content.setPadding(new Insets(20, 30, 30, 30));
+
+        
+        int totalLost    = countItems("Lost");
+        int totalFound   = countItems("Found");
+        int pendingClaims = countPendingClaims();
+
         HBox statsBox = new HBox(15);
         statsBox.getChildren().addAll(
-                buildStatCard("TOTAL LOST",      "128", "+5%",  "From last 30 days"),
-                buildStatCard("TOTAL FOUND",     "254", "-2%",  "From last 30 days"),
-                buildStatCard("PENDING CLAIMS",  "42",  "+12%", "Action required")
+                buildStatCard("TOTAL LOST",     String.valueOf(totalLost),    "Live from database"),
+                buildStatCard("TOTAL FOUND",    String.valueOf(totalFound),   "Live from database"),
+                buildStatCard("PENDING CLAIMS", String.valueOf(pendingClaims),"Action required")
         );
+
         content.getChildren().add(statsBox);
         return content;
     }
 
-    private VBox buildStatCard(String title, String value, String change, String note) {
+    private int countItems(String type) {
+        String sql = "SELECT COUNT(*) FROM items WHERE type = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, type);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    
+    private int countPendingClaims() {
+        String sql = "SELECT COUNT(*) FROM claims WHERE status = 'Pending'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    private VBox buildStatCard(String title, String value, String note) {
         VBox card = new VBox(5);
         card.setPadding(new Insets(20));
         card.setPrefWidth(200);
         card.setStyle("-fx-background-color:white; -fx-background-radius:10;");
+
         Label titleLabel = new Label(title);
         titleLabel.setTextFill(Color.GRAY);
         titleLabel.setStyle("-fx-font-size:11px;");
-        HBox valueRow = new HBox(8);
-        valueRow.setAlignment(Pos.CENTER_LEFT);
+
         Label valueLabel = new Label(value);
         valueLabel.setStyle("-fx-font-size:28px; -fx-font-weight:bold;");
-        Label changeLabel = new Label(change);
-        changeLabel.setTextFill(change.startsWith("+") ? Color.GREEN : Color.RED);
-        changeLabel.setStyle("-fx-font-size:13px; -fx-font-weight:bold;");
-        valueRow.getChildren().addAll(valueLabel, changeLabel);
+
         Label noteLabel = new Label(note);
         noteLabel.setTextFill(Color.GRAY);
         noteLabel.setStyle("-fx-font-size:11px;");
-        card.getChildren().addAll(titleLabel, valueRow, noteLabel);
+
+        card.getChildren().addAll(titleLabel, valueLabel, noteLabel);
         return card;
     }
 
