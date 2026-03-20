@@ -14,23 +14,11 @@ import javafx.stage.Stage;
 import model.SessionManager;
 import model.User;
 
-/**
- * BasePage - Abstract base class for all user-facing pages.
- *
- * OOP PRINCIPLE: Inheritance + Abstraction
- * - Provides the shared buildSidebar() method to ALL subclasses.
- * - Declares show() as abstract, forcing every subclass to implement it.
- * - Subclasses: DashboardPage, ReportLostPage, ReportFoundPage,
- *               MyClaimsPage, ProfilePage, SearchItemsPage
- */
+
 public abstract class BasePage {
 
-    // Protected so all subclasses can access stage directly
     protected Stage stage;
-    /**
-     * Builds the shared left sidebar used across all user pages.
-     * Subclasses call this method via inheritance — no duplication needed.
-     */
+    
     public VBox buildSidebar(String activePage) {
         VBox sidebar = new VBox(10);
         sidebar.setPrefWidth(220);
@@ -40,7 +28,6 @@ public abstract class BasePage {
         Label appName = new Label("Lost and Found\nManagement System");
         appName.setStyle("-fx-font-size:13px; -fx-font-weight:bold;");
 
-        // Dynamic User ID from session
         User currentUser = SessionManager.getInstance().getCurrentUser();
         String idText = (currentUser != null) ? "User ID: " + currentUser.getId() : "User ID: N/A";
         Label userId = new Label(idText);
@@ -56,7 +43,6 @@ public abstract class BasePage {
         Button claimsBtn      = sidebarButton("My Claims",    activePage.equals("My Claims"));
         Button profileBtn     = sidebarButton("Profile",      activePage.equals("Profile"));
 
-        // Navigation — each button creates the target page
         dashboardBtn.setOnAction(_   -> new DashboardPage(stage).show());
         reportLostBtn.setOnAction(_  -> new ReportLostPage(stage).show());
         reportFoundBtn.setOnAction(_ -> new ReportFoundPage(stage).show());
@@ -88,10 +74,6 @@ public abstract class BasePage {
         return sidebar;
     }
 
-    /**
-     * Helper method for styling sidebar buttons.
-     * Also inherited by all subclasses.
-     */
     protected Button sidebarButton(String text, boolean active) {
         Button btn = new Button(text);
         btn.setPrefWidth(180);
@@ -114,9 +96,6 @@ public abstract class BasePage {
         return btn;
     }
 
-    /**
-     * Abstract method — every subclass MUST implement this.
-     * OOP PRINCIPLE: Abstraction
-     */
+   
     public abstract void show();
 }

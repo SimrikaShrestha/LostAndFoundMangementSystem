@@ -15,16 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-/**
- * ReportFoundPage - Page where users report a found item.
- *
- * OOP PRINCIPLE: Inheritance
- * - Extends BasePage to inherit buildSidebar() and sidebarButton().
- * - Previously did: new DashboardPage(stage).buildSidebar("Report Found")
- *   which was WRONG — it created an entire DashboardPage just to steal one method.
- * - Now correctly calls buildSidebar() directly as an inherited method.
- * - Overrides show() as required by BasePage.
- */
+
 public class ReportFoundPage extends BasePage {
 
     public ReportFoundPage(Stage stage) {
@@ -37,8 +28,7 @@ public class ReportFoundPage extends BasePage {
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color:#f0f9fa;");
 
-        // ✅ Correct: buildSidebar() is INHERITED from BasePage
-        // ❌ Old wrong way: new DashboardPage(stage).buildSidebar("Report Found")
+        
         root.setLeft(buildSidebar("Report Found"));
         root.setCenter(buildMainContent());
 
@@ -154,10 +144,7 @@ public class ReportFoundPage extends BasePage {
         return label;
     }
 
-    /**
-     * Overrides abstract show() from BasePage.
-     * OOP PRINCIPLE: Polymorphism
-     */
+   
     @Override
     public void show() {
         stage.show();

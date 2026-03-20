@@ -90,17 +90,14 @@ public class SearchItemsPage {
 
         resultsBox.getChildren().addAll(resultsTitle, colHeaders, new Separator());
 
-        // ✅ Load all items from database on page open
         loadResults(resultsBox, "", "All");
 
-        // ✅ Search button fetches fresh data from DB every time
         searchBtn.setOnAction(_ -> {
             String query  = searchField.getText().trim();
             String filter = filterBox.getValue();
             loadResults(resultsBox, query, filter);
         });
 
-        // ✅ Also search when pressing Enter in the search field
         searchField.setOnAction(_ -> {
             String query  = searchField.getText().trim();
             String filter = filterBox.getValue();
@@ -111,14 +108,10 @@ public class SearchItemsPage {
         return content;
     }
 
-    /**
-     * Fetches items from MySQL database and displays them in resultsBox.
-     * Filters by keyword and type (Lost / Found / All).
-     * This replaces the old hardcoded sample data.
-     */
+    
+     
     private void loadResults(VBox resultsBox, String query, String filter) {
-        // Remove old result rows (keep title, headers, separator = first 3 children)
-        resultsBox.getChildren().removeIf(node ->
+                resultsBox.getChildren().removeIf(node ->
             node instanceof HBox && ((HBox) node).getChildren().size() == 5
         );
 
@@ -131,7 +124,6 @@ public class SearchItemsPage {
             noResults.setId("no-results");
             resultsBox.getChildren().add(noResults);
         } else {
-            // Remove "No items found" label if present
             resultsBox.getChildren().removeIf(node ->
                 node instanceof Label && "no-results".equals(node.getId())
             );
@@ -141,10 +133,7 @@ public class SearchItemsPage {
         }
     }
 
-    /**
-     * Queries the MySQL database for items matching the search keyword and filter.
-     * Returns a list of String arrays: [name, category, type, date, location]
-     */
+    
     private List<String[]> fetchFromDatabase(String query, String filter) {
         List<String[]> list = new ArrayList<>();
 
@@ -152,17 +141,15 @@ public class SearchItemsPage {
             "SELECT name, category, type, date, location FROM items WHERE 1=1"
         );
 
-        // Filter by type (Lost / Found)
         if (!filter.equals("All")) {
             sql.append(" AND type = ?");
         }
 
-        // Filter by keyword in name or category
         if (!query.isEmpty()) {
             sql.append(" AND (name LIKE ? OR category LIKE ?)");
         }
 
-        sql.append(" ORDER BY id DESC");  // newest first
+        sql.append(" ORDER BY id DESC");  
 
         try (Connection conn = new DBConnectionTest().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {

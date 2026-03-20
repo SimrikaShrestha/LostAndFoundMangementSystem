@@ -46,7 +46,6 @@ public class LoginPage {
         Label subtitle = new Label("Login");
         subtitle.setTextFill(Color.GRAY);
 
-        // ── Role selection buttons ──────────────────────────────
         Label roleLabel = new Label("Select Role");
         roleLabel.setStyle("-fx-font-size:12px; -fx-text-fill:gray;");
 
@@ -54,7 +53,6 @@ public class LoginPage {
         Button staffBtn = roleButton("Staff");
         Button adminBtn = roleButton("Admin");
 
-        // Default selected role
         final String[] selectedRole = {"user"};
         highlightRole(userBtn, staffBtn, adminBtn, "user");
 
@@ -136,7 +134,6 @@ public class LoginPage {
         stage.show();
     }
 
-    // ── Helper: create a role button ────────────────────────────
     private Button roleButton(String text) {
         Button btn = new Button(text);
         btn.setPrefWidth(90);
@@ -150,7 +147,6 @@ public class LoginPage {
         return btn;
     }
 
-    // ── Helper: highlight the selected role button ───────────────
     private void highlightRole(Button userBtn, Button staffBtn, Button adminBtn, String role) {
         String active   = "-fx-background-color:#7fd1d8; -fx-text-fill:black; -fx-font-weight:bold; -fx-background-radius:20; -fx-font-size:12px; -fx-padding:6 12;";
         String inactive = "-fx-background-color:#f0f0f0; -fx-text-fill:#555555; -fx-background-radius:20; -fx-font-size:12px; -fx-padding:6 12;";

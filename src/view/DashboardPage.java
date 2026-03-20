@@ -17,20 +17,13 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import model.Item;
 
-/**
- * DashboardPage - Main user dashboard screen.
- *
- * OOP PRINCIPLE: Inheritance
- * - Extends BasePage to inherit buildSidebar() and sidebarButton().
- * - Overrides show() as required by the abstract parent.
- * - No longer creates a DashboardPage object just to get the sidebar.
- */
+
 public class DashboardPage extends BasePage {
 
     private DashboardController controller;
 
     public DashboardPage(Stage stage) {
-        // 'stage' field is inherited from BasePage — no redeclaration needed
+        
         this.stage = stage;
         this.controller = new DashboardController();
         buildPage();
@@ -40,7 +33,7 @@ public class DashboardPage extends BasePage {
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color:#f0f9fa;");
 
-        // buildSidebar() is INHERITED from BasePage — no copy-paste, no new DashboardPage()
+       
         root.setLeft(buildSidebar("Dashboard"));
         root.setCenter(buildMainContent());
 
@@ -177,10 +170,7 @@ public class DashboardPage extends BasePage {
         };
     }
 
-    /**4
-     * Overrides abstract show() from BasePage.
-     * OOP PRINCIPLE: Polymorphism — each page has its own show() behaviour.
-     */
+   
     @Override
     public void show() {
         stage.show();
