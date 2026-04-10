@@ -18,25 +18,33 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Category;
 
+// AdminCategoriesPage shows a UI to manage categories
+// OOP concepts:
+// - Encapsulation
+// - Abstraction
+// - Polymorphism
 public class AdminCategoriesPage {
-    private Stage stage;
-    private String adminName;
-    private AdminCategoryController controller = new AdminCategoryController();
-    private VBox tableBody;
+    private Stage stage;                 
+    private String adminName;           
+    private AdminCategoryController controller = new AdminCategoryController(); // Handles data operations
+    private VBox tableBody;              // Holds category rows
 
+    // Constructor
     public AdminCategoriesPage(Stage stage, String adminName) {
         this.stage = stage;
         this.adminName = adminName;
     }
 
+    // Abstraction
     public void show() {
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: #f0f5f7;");
-        root.setLeft(AdminSidebar.build(stage, "categories", adminName));
+        root.setLeft(AdminSidebar.build(stage, "categories", adminName)); // Modular sidebar
 
         VBox content = new VBox(20);
         content.setPadding(new Insets(30, 36, 36, 36));
 
+        // Top bar: title + add button
         HBox topBar = new HBox(14);
         topBar.setAlignment(Pos.CENTER_LEFT);
         Label title = new Label("Categories");
@@ -46,22 +54,30 @@ public class AdminCategoriesPage {
         Button addBtn = new Button("+ Add Category");
         addBtn.setStyle(primaryBtn());
         addBtn.setCursor(javafx.scene.Cursor.HAND);
-        addBtn.setOnAction(_ -> showDialog(null));
+        addBtn.setOnAction(_ -> showDialog(null)); // Polymorphism: different behavior on click
         topBar.getChildren().addAll(title, addBtn);
 
+        // Table setup
         VBox table = new VBox(0);
         table.setStyle("-fx-background-color: white; -fx-background-radius: 12;");
 
+        // Header row
         HBox header = new HBox();
         header.setPadding(new Insets(12, 20, 12, 20));
         header.setStyle("-fx-background-color: #f8fbfc; -fx-background-radius: 12 12 0 0; -fx-border-color: #eaf1f3; -fx-border-width: 0 0 1 0;");
-        header.getChildren().addAll(hcol("CATEGORY NAME", 200), hcol("DESCRIPTION", 320), hcol("ITEMS", 100), hcol("ACTIONS", 160));
+        header.getChildren().addAll(
+            hcol("CATEGORY NAME", 200),
+            hcol("DESCRIPTION", 320),
+            hcol("ITEMS", 100),
+            hcol("ACTIONS", 160)
+        );
 
-        tableBody = new VBox(0);
-        refresh();
+        tableBody = new VBox(0); // Holds dynamic category rows
+        refresh();               // Load categories from controller
         table.getChildren().addAll(header, tableBody);
         content.getChildren().addAll(topBar, table);
 
+        // Scrollable content
         ScrollPane scroll = new ScrollPane(content);
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: #f0f5f7; -fx-background: #f0f5f7;");
@@ -69,12 +85,14 @@ public class AdminCategoriesPage {
 
         stage.setScene(new Scene(root, 1100, 700));
         stage.setTitle("Admin — Categories");
+        stage.setMaximized(true);
         stage.show();
     }
 
+    // Refresh table data
     private void refresh() {
-        tableBody.getChildren().clear();
-        for (Category cat : controller.getAllCategories()) {
+        tableBody.getChildren().clear(); // Clear old rows
+        for (Category cat : controller.getAllCategories()) { // Get categories from controller
             HBox row = new HBox();
             row.setAlignment(Pos.CENTER_LEFT);
             row.setPadding(new Insets(13, 20, 13, 20));
@@ -82,32 +100,42 @@ public class AdminCategoriesPage {
             row.setOnMouseEntered(_ -> row.setStyle("-fx-background-color: #f8fbfc; -fx-border-color: #eaf1f3; -fx-border-width: 0 0 1 0;"));
             row.setOnMouseExited(_ -> row.setStyle("-fx-background-color: transparent; -fx-border-color: #eaf1f3; -fx-border-width: 0 0 1 0;"));
 
-            Label name = col(cat.getName(), 200, true);
-            Label desc = col(cat.getDescription(), 320, false);
+            // Create cells for category data
+            Label name  = col(cat.getName(), 200, true);
+            Label desc  = col(cat.getDescription(), 320, false);
             Label count = col(String.valueOf(cat.getItemCount()), 100, false);
 
-            HBox actions = new HBox(8); actions.setPrefWidth(160); actions.setAlignment(Pos.CENTER_LEFT);
+            // Actions: edit and delete
+            HBox actions = new HBox(8); 
+            actions.setPrefWidth(160); actions.setAlignment(Pos.CENTER_LEFT);
             Button edit = new Button("Edit");
             edit.setStyle("-fx-font-size: 11px; -fx-font-weight: 600; -fx-background-color: #e8f7f8; -fx-text-fill: #2a7a85; -fx-background-radius: 6; -fx-padding: 5 10; -fx-cursor: hand;");
-            edit.setOnAction(_ -> showDialog(cat));
+            edit.setOnAction(_ -> showDialog(cat)); // Polymorphism: edit behavior
             Button del = new Button("Delete");
             del.setStyle("-fx-font-size: 11px; -fx-font-weight: 600; -fx-background-color: #fee2e2; -fx-text-fill: #991b1b; -fx-background-radius: 6; -fx-padding: 5 10; -fx-cursor: hand;");
-            del.setOnAction(_ -> {
+            del.setOnAction(_ -> { // Polymorphism: delete behavior
                 Alert a = new Alert(Alert.AlertType.CONFIRMATION, "Delete category \"" + cat.getName() + "\"?", ButtonType.YES, ButtonType.NO);
                 a.setHeaderText(null);
-                a.showAndWait().ifPresent(b -> { if (b == ButtonType.YES) { controller.deleteCategory(cat.getId()); refresh(); } });
+                a.showAndWait().ifPresent(b -> { 
+                    if (b == ButtonType.YES) { controller.deleteCategory(cat.getId()); refresh(); } 
+                });
             });
+
             actions.getChildren().addAll(edit, del);
             row.getChildren().addAll(name, desc, count, actions);
             tableBody.getChildren().add(row);
         }
+
+        // Show message if no categories
         if (tableBody.getChildren().isEmpty()) {
-            Label e = new Label("No categories found."); e.setPadding(new Insets(20));
+            Label e = new Label("No categories found.");
+            e.setPadding(new Insets(20));
             e.setStyle("-fx-font-size: 13px; -fx-text-fill: #9ab5bc;");
             tableBody.getChildren().add(e);
         }
     }
 
+    // Show dialog to add/edit category (Abstraction: hides complex UI setup)
     private void showDialog(Category existing) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
@@ -123,8 +151,8 @@ public class AdminCategoriesPage {
 
         TextField nameField = df("Category Name", existing != null ? existing.getName() : "");
         TextField descField = df("Description", existing != null ? existing.getDescription() : "");
-
-        Label err = new Label(""); err.setStyle("-fx-font-size: 12px; -fx-text-fill: #cc0000;");
+        Label err = new Label(""); 
+        err.setStyle("-fx-font-size: 12px; -fx-text-fill: #cc0000;");
 
         Button save = new Button(existing == null ? "Add Category" : "Save Changes");
         save.setMaxWidth(Double.MAX_VALUE);
@@ -142,8 +170,26 @@ public class AdminCategoriesPage {
         dialog.showAndWait();
     }
 
-    private TextField df(String p, String v) { TextField f = new TextField(v); f.setPromptText(p); f.setStyle("-fx-font-size: 13px; -fx-background-radius: 8; -fx-border-color: #c5d8dc; -fx-border-radius: 8; -fx-padding: 9 12;"); return f; }
-    private Label hcol(String t, double w) { Label l = new Label(t); l.setPrefWidth(w); l.setStyle("-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #7a9ba3;"); return l; }
-    private Label col(String t, double w, boolean b) { Label l = new Label(t); l.setPrefWidth(w); l.setStyle("-fx-font-size: 13px; -fx-font-weight: " + (b?"600":"400") + "; -fx-text-fill: " + (b?"#1a2e35":"#4a6b73") + ";"); return l; }
-    private String primaryBtn() { return "-fx-font-size: 13px; -fx-font-weight: 600; -fx-background-color: #5bc8d0; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 9 16;"; }
+    // Helper methods to create styled fields and labels (modularity)
+    private TextField df(String p, String v) { 
+        TextField f = new TextField(v); 
+        f.setPromptText(p); 
+        f.setStyle("-fx-font-size: 13px; -fx-background-radius: 8; -fx-border-color: #c5d8dc; -fx-border-radius: 8; -fx-padding: 9 12;"); 
+        return f; 
+    }
+    private Label hcol(String t, double w) { 
+        Label l = new Label(t); 
+        l.setPrefWidth(w); 
+        l.setStyle("-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #7a9ba3;"); 
+        return l; 
+    }
+    private Label col(String t, double w, boolean b) { 
+        Label l = new Label(t); 
+        l.setPrefWidth(w); 
+        l.setStyle("-fx-font-size: 13px; -fx-font-weight: " + (b ? "600" : "400") + "; -fx-text-fill: " + (b ? "#1a2e35" : "#4a6b73") + ";"); 
+        return l; 
+    }
+    private String primaryBtn() { 
+        return "-fx-font-size: 13px; -fx-font-weight: 600; -fx-background-color: #5bc8d0; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 9 16;"; 
+    }
 }

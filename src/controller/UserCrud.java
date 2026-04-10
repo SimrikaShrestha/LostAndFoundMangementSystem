@@ -9,6 +9,7 @@ import model.User;
 
 public class UserCrud {
 
+    // Encapsulated 
     private Connection connect() {
         try {
             return DriverManager.getConnection(
@@ -22,6 +23,8 @@ public class UserCrud {
         return null;
     }
 
+    // Create new user in database
+    // Encapsulation
     public void createUser(String fullname, String email, String phone, String address, String username, String password) {
         try {
             Connection conn = connect();
@@ -34,12 +37,14 @@ public class UserCrud {
             ps.setString(5, username);
             ps.setString(6, password);
             ps.executeUpdate();
-            System.out.println("User Created");
+            System.out.println("User Created"); // Notify that user is created
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    
+    // Encapsulation
     public User getUserByUsername(String username) {
         try {
             Connection conn = connect();
@@ -48,6 +53,7 @@ public class UserCrud {
             ps.setString(1, username);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
+                // Return User object (data encapsulated in User class)
                 return new User(
                     rs.getInt("id"),
                     rs.getString("fullname"),
@@ -62,9 +68,8 @@ public class UserCrud {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return null; // Return null if user not found
     }
-
     public void viewUser() {
         try {
             Connection conn = connect();
@@ -86,6 +91,8 @@ public class UserCrud {
         }
     }
 
+    
+    // Encapsulation
     public void updateUser(String username, String fullname, String email, String phone, String address, String password) {
         try {
             Connection conn = connect();
@@ -98,12 +105,14 @@ public class UserCrud {
             ps.setString(5, password);
             ps.setString(6, username);
             ps.executeUpdate();
-            System.out.println("User Updated");
+            System.out.println("User Updated"); 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    // Delete user from database
+    // Encapsulation
     public void deleteUser(String username) {
         try {
             Connection conn = connect();
@@ -111,7 +120,7 @@ public class UserCrud {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, username);
             ps.executeUpdate();
-            System.out.println("User Deleted");
+            System.out.println("User Deleted"); // Notify deletion done
         } catch (Exception e) {
             e.printStackTrace();
         }

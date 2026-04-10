@@ -13,9 +13,17 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+
+// - Encapsulation: private fields, accessed via getters/setters
+// - Abstraction: only exposing show() method for building UI, hiding implementation details
+// - Inheritance: extends Stage indirectly by Stage object (
+// - Polymorphism: Button.setOnAction takes a lambda (different behaviors for different buttons)
+// - Modularity: UI divided into sidebar, content, card, history, etc.
 public class AdminBackupPage {
-    private Stage stage;
-    private String adminName;
+    private Stage stage;          
+    private String adminName;     
+
+    // UI components encapsulated as private fields
     private BorderPane root;
     private VBox content;
     private VBox card;
@@ -30,12 +38,13 @@ public class AdminBackupPage {
     private Separator sep;
     private ScrollPane scroll;
 
+    // Constructor: sets up stage and admin name
     public AdminBackupPage(Stage stage, String adminName) {
         this.stage = stage;
         this.adminName = adminName;
     }
 
-    // Getters and Setters
+    // Getters and Setters for all private fields (encapsulation)
     public Stage getStage() { return stage; }
     public void setStage(Stage stage) { this.stage = stage; }
 
@@ -81,21 +90,23 @@ public class AdminBackupPage {
     public ScrollPane getScroll() { return scroll; }
     public void setScroll(ScrollPane scroll) { this.scroll = scroll; }
 
+    // Main method to show the backup UI
+    // Abstraction
     public void show() {
-        root = new BorderPane();
+        root = new BorderPane(); // Main layout
         root.setStyle("-fx-background-color: #f0f5f7;");
-        root.setLeft(AdminSidebar.build(stage, "backup", adminName));
+        root.setLeft(AdminSidebar.build(stage, "backup", adminName)); // Modular sidebar
 
-        content = new VBox(20);
+        content = new VBox(20); // Content container
         content.setPadding(new Insets(30, 36, 36, 36));
 
-        title = new Label("Backup");
+        title = new Label("Backup"); // Page title
         title.setStyle("-fx-font-size: 22px; -fx-font-weight: 700; -fx-text-fill: #1a2e35;");
 
-        sub = new Label("Manage system data backups.");
+        sub = new Label("Manage system data backups."); // Subtitle
         sub.setStyle("-fx-font-size: 13px; -fx-text-fill: #7a9ba3;");
 
-        card = new VBox(16);
+        card = new VBox(16); // Card for backup info
         card.setPadding(new Insets(24));
         card.setStyle("-fx-background-color: white; -fx-background-radius: 12;");
         card.setMaxWidth(500);
@@ -107,23 +118,25 @@ public class AdminBackupPage {
         info.setWrapText(true);
         info.setStyle("-fx-font-size: 13px; -fx-text-fill: #4a6b73;");
 
-        statusLbl = new Label("");
+        statusLbl = new Label(""); // Shows backup success message
 
         backupBtn = new Button("💾  Create Backup Now");
         backupBtn.setStyle("-fx-font-size: 13px; -fx-font-weight: 600; -fx-background-color: #5bc8d0; " +
                 "-fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;");
+
+        // Polymorphism: lambda defines behavior of button click
         backupBtn.setOnAction(_ -> {
             statusLbl.setText("✓ Backup created successfully at " +
                     java.time.LocalDateTime.now().toString().substring(0, 16));
             statusLbl.setTextFill(Color.web("#166534"));
         });
 
-        sep = new Separator();
+        sep = new Separator(); // Visual separation
 
         histTitle = new Label("Backup History");
         histTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #1a2e35;");
 
-        history = new VBox(8);
+        history = new VBox(8); // Backup history list
         for (String[] entry : new String[][]{
             {"Mar 15, 2026  09:00", "Full Backup", "124 MB"},
             {"Mar 10, 2026  09:00", "Full Backup", "118 MB"},
@@ -133,6 +146,8 @@ public class AdminBackupPage {
             row.setAlignment(Pos.CENTER_LEFT);
             row.setPadding(new Insets(10, 0, 10, 0));
             row.setStyle("-fx-border-color: #eaf1f3; -fx-border-width: 0 0 1 0;");
+
+            // Create labels for date, type, size
             Label dateLabel = new Label(entry[0]);
             dateLabel.setPrefWidth(200);
             dateLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #1a2e35;");
@@ -142,6 +157,7 @@ public class AdminBackupPage {
             Label sizeLabel = new Label(entry[2]);
             sizeLabel.setPrefWidth(80);
             sizeLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #9ab5bc;");
+
             row.getChildren().addAll(dateLabel, typeLabel, sizeLabel);
             history.getChildren().add(row);
         }
@@ -149,13 +165,13 @@ public class AdminBackupPage {
         card.getChildren().addAll(cardTitle, info, backupBtn, statusLbl, sep, histTitle, history);
         content.getChildren().addAll(title, sub, card);
 
-        scroll = new ScrollPane(content);
+        scroll = new ScrollPane(content); // Scrollable content
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: #f0f5f7; -fx-background: #f0f5f7;");
         root.setCenter(scroll);
 
-        stage.setScene(new Scene(root, 1100, 700));
-        stage.setTitle("Admin — Backup");
-        stage.show();
+        stage.setScene(new Scene(root, 1100, 700)); // Set scene
+        stage.setTitle("Admin — Backup");            // Window title
+        stage.show();                                 // Show stage
     }
 }
