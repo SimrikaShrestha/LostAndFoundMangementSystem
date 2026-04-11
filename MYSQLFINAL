@@ -1,0 +1,73 @@
+Use mydb;
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(100) NOT NULL,
+    fullname VARCHAR(100),
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    address VARCHAR(200),
+    role VARCHAR(20) DEFAULT 'user'
+);
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    item_count INT DEFAULT 0
+);
+CREATE TABLE items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(100),
+    date DATE,
+    status VARCHAR(50) DEFAULT 'Searching',
+    type VARCHAR(50), -- Lost / Found
+    description TEXT,
+    location VARCHAR(255),
+
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+CREATE TABLE claims (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    item_id INT NOT NULL,
+    status VARCHAR(50) DEFAULT 'Pending',
+    claimed_date DATE,
+    description TEXT,
+
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (item_id) REFERENCES items(id)
+);
+INSERT INTO users (fullname, email, phone, address, username, password, role) VALUES
+('Simrika Shrestha', 'simrika@email.com', '9800000001', 'Kathmandu', 'simrika', 'password123', 'user'),
+('Sujita Maharjan',  'sujita@email.com',  '9849921237', 'Godawari',  'sujita',  'qwertyuiop', 'user'),
+('Simran Maharjan',  'simran@email.com',  '9800000003', 'Bhaktapur', 'simran',  'password123', 'staff'),
+('Aayusha Shrestha', 'aayusha@email.com', '9800000004', 'Kathmandu', 'aayusha', 'password123', 'admin');
+INSERT INTO categories (name, description) VALUES
+('Electronics','Phones, laptops, tablets'),
+('Bags','Backpacks, handbags'),
+('Accessories','Wallets, keys'),
+('Personal','Clothing, bottles'),
+('Documents','IDs, certificates');
+INSERT INTO items (user_id, name, category, date, status, type, description, location) VALUES
+(4, 'Umbrella', 'Personal', '2026-03-17', 'Searching', 'Lost', 'Black umbrella', 'Cafeteria'),
+(1, 'iPhone 13', 'Electronics', '2026-02-24', 'Searching', 'Lost', 'Black phone', 'Library');
+INSERT INTO claims (user_id, item_id, status, claimed_date, description) VALUES
+(1, 1, 'Pending', '2026-02-25', 'This is my lost item');
+DELIMITER $$
+
+CREATE TRIGGER after_item_insert
+AFTER INSERT ON items
+FOR EACH ROW
+UPDATE categories SET item_count = item_count + 1
+WHERE name = NEW.category$$
+
+CREATE TRIGGER after_item_delete
+AFTER DELETE ON items
+FOR EACH ROW
+UPDATE categories SET item_count = item_count - 1
+WHERE name = OLD.category$$
+
+DELIMITER ;
